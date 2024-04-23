@@ -1,7 +1,5 @@
-# Welcome to streamlit
+# Rude GPT 😒
 
-This is the app you get when you run `streamlit hello`, extracted as its own app.
+Chat with Rude GPT 😒
 
-Edit [Hello.py](./Hello.py) to customize this app to your heart's desire. ❤️
-
-Check it out on [Streamlit Community Cloud](https://st-hello-app.streamlit.app/)
+Check it out on [Rude GPT](https://rude-gpt.streamlit.app/)
