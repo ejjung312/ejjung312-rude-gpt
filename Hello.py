@@ -1,8 +1,9 @@
 import streamlit as st
 from langchain_openai import ChatOpenAI
+from langchain.memory import ConversationBufferWindowMemory
 from langchain.prompts import ChatPromptTemplate
 from langchain.callbacks.base import BaseCallbackHandler
-from langchain.schema.runnable import RunnablePassthrough
+from langchain.schema.runnable import RunnablePassthrough, RunnableLambda
 
 icon_dic = {'human': '😁', 'ai': '😒'}
 
@@ -14,9 +15,6 @@ st.set_page_config(
 st.header('Rude GPT😑', divider='rainbow')
 
 st.write("# What are you looking at 😒?")
-
-if "messages" not in st.session_state:
-    st.session_state["messages"] = []
 
 class ChatCallbackHandler(BaseCallbackHandler):
     message = ""
@@ -39,8 +37,19 @@ llm = ChatOpenAI(
     ]
 )
 
+if "messages" not in st.session_state:
+    st.session_state["messages"] = []
+    st.session_state["memory"] = ConversationBufferWindowMemory(
+        llm=llm,
+        return_messages=True,
+        k=10,
+    )
+
 def save_message(message, role):
     st.session_state["messages"].append({"message": message, "role": role})
+
+def save_memory(input, output):
+    st.session_state["memory"].save_context({"input": input}, {"output": output})
 
 def send_message(message, role, save):
     with st.chat_message(name=role, avatar=icon_dic[role]):
@@ -88,8 +97,12 @@ if message:
     send_message(message, "human", True)
     
     chain = (
-        {"language": RunnablePassthrough(), "message": RunnablePassthrough()} | prompt | llm
+        {
+            "language": RunnablePassthrough(), 
+            "message": RunnablePassthrough()
+        } 
+        | prompt | llm
     )
-
     with st.chat_message(name="ai", avatar="😒"):
-        chain.invoke({"language": language, "message": message})
+        response = chain.invoke({"language": language, "message": message})
+        save_memory(message, response.content)
